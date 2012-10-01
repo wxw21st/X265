@@ -1,0 +1,22 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "x265", "x265.vcxproj", "{24033A5F-1096-0A0C-432D-0E7719BC686F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+		Template|Win32 = Template|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{24033A5F-1096-0A0C-432D-0E7719BC686F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{24033A5F-1096-0A0C-432D-0E7719BC686F}.Debug|Win32.Build.0 = Debug|Win32
+		{24033A5F-1096-0A0C-432D-0E7719BC686F}.Release|Win32.ActiveCfg = Release|Win32
+		{24033A5F-1096-0A0C-432D-0E7719BC686F}.Release|Win32.Build.0 = Release|Win32
+		{24033A5F-1096-0A0C-432D-0E7719BC686F}.Template|Win32.ActiveCfg = Template|Win32
+		{24033A5F-1096-0A0C-432D-0E7719BC686F}.Template|Win32.Build.0 = Template|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
