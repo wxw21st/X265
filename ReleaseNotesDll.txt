@@ -1,0 +1,31 @@
+File  created: YananZhao <ya_nanzhao@hotmail.com>
+Last modified: 2014-01-17
+
+Authors: 
+	 Yanan Zhao
+	 Xiangwen Wang
+	 Zhengyi Luo
+	 Min Chen
+	 Li Song
+
+==========================================================================
+
+Dll project of the real time high efficiency HEVC encoder from SJTU-MediaLab.
+
+==========================================================================
+
+x265-dll project Release Notes
+
+
+2014-01-17
+---------------------
+Milestone version is released, features include
+- Based on x265-V2014-01-Milestone project
+- encoder features include "ReleaseNotes/2014-01-16" and before
+- Support .cfg file for encoder configuration
+- Others
+
+Improvements:
+- No errors and warnings by Intel Compiler (Avoid to use MS-VC compiler)
+- Romove redundant macros, clean code
+

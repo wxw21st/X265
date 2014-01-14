@@ -1,0 +1,39 @@
+File  created: YananZhao <ya_nanzhao@hotmail.com>
+Last modified: 2014-01-16
+
+Authors: 
+	 Xiangwen Wang
+	 Min Chen
+	 Zhengyi Luo
+	 Yanan Zhao
+	 Li Song 
+
+==========================================================================
+
+Milestone version of the real time high efficiency HEVC encoder from SJTU-MediaLab.
+
+==========================================================================
+
+Release Notes
+
+
+2014-01-16
+---------------------
+Milestone version is released, features include
+- x86 & x64 platform support (Windows)
+- ASM & multithread support (asseblor, intrinsic, openMP)
+- CTU 64x64, split depth 4
+- RDO for Intra/Inter picture
+- WPP, Quasi WPP
+- Deblock
+- SAO
+- Rate Control (frame level CBR)
+- Fast Inter mode decision
+- Automatic picture size aligning (to be a multiple of CTU size)
+- Scene Change Detection
+- Others
+
+Improvements:
+- No errors and warnings by Intel Compiler (Avoid to use MS-VC compiler)
+- Romove redundant macros, clean code
+
