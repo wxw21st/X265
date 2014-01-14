@@ -1,9 +1,9 @@
 /*****************************************************************************
  * md5.h: Calculate MD5
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ * Copyright (C) 2012-2015 x265 project
  *
- * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
+ * Authors: Min Chen <chenm003@163.com>,  Xiangwen Wang <wxw21st@163.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

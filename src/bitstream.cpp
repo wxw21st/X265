@@ -1,7 +1,7 @@
 /*****************************************************************************
  * bitstream.cpp: Bitstream Functions
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ * Copyright (C) 2012-2015 x265 project
  *
  * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
  *
@@ -25,6 +25,7 @@
 #include "x265.h"
 #include "bitstream.h"
 #include "utils.h"
+
 
 // ***************************************************************************
 
@@ -58,45 +59,54 @@ static void xCodeProfileTier( X265_t *h )
     WRITE_FLAG( 0,                          "XXX_tier_flag[]"     );
     WRITE_CODE( h->ucProfileIdc,    5,      "XXX_profile_idc[]"   );   
     for( i=0; i<32; i++ ) {
-        WRITE_FLAG( FALSE,  "XXX_profile_compatibility_flag[][j]" );   
+        if (i == 1 || i == 2)
+            WRITE_FLAG( TRUE,  "XXX_profile_compatibility_flag[][j]" );   
+        else
+            WRITE_FLAG( FALSE,  "XXX_profile_compatibility_flag[][j]" );   
     }
-    WRITE_CODE( 0 , 16, "XXX_reserved_zero_16bits[]" );  
+    WRITE_FLAG(0,                           "general_progressive_source_flag");
+    WRITE_FLAG(0,                           "general_interlaced_source_flag");
+    WRITE_FLAG(0,                           "general_non_packed_constraint_flag");
+    WRITE_FLAG(1,                           "general_frame_only_constraint_flag");
+    WRITE_CODE(0, 16,                       "XXX_reserved_zero_48bits[ 0..15]");
+    WRITE_CODE(0, 16,                       "XXX_reserved_zero_48bits[16..31]");
+    WRITE_CODE(0, 12,                       "XXX_reserved_zero_48bits[32..43]");
 }
 
 static void xCodePTL( X265_t *h, UInt profilePresentFlag, Int maxNumSubLayersMinus1 )
 {
-    xBitStream *pBS = &h->bs;
+  maxNumSubLayersMinus1 = 0;//x64 modify, avoid warning  
+	xBitStream *pBS = &h->bs;
 
     assert( maxNumSubLayersMinus1 == 0 );
     if(profilePresentFlag) {
         xCodeProfileTier( h );    // general_...
     }
-    WRITE_CODE( h->ucProfileIdc, 8, "general_level_idc" );
+    WRITE_CODE( 180/*h->ucProfileIdc*/, 8, "general_level_idc" );//93
 }
 
 void xWriteSPS( X265_t *h )
 {
     xBitStream *pBS = &h->bs;
-    UInt i;
 
     WRITE_CODE( 0,                          4,          "sps_video_parameter_set_id" );
     WRITE_CODE( 1-1,                        3,          "sps_max_sub_layers_minus1" );
-    WRITE_FLAG( 0,                                      "temporal_id_nesting_flag" );
+    WRITE_FLAG( 1,                                      "sps_temporal_id_nesting_flag" );
     xCodePTL( h, 1, 1 - 1);
     WRITE_UVLC( 0,                                      "sps_seq_parameter_set_id" );
     WRITE_UVLC( CHROMA_420,                             "chroma_format_idc" );
 
-    WRITE_UVLC( h->usWidth,                             "pic_width_in_luma_samples" );
-    WRITE_UVLC( h->usHeight,                            "pic_height_in_luma_samples" );
+    WRITE_UVLC( h->iWidth,                             "pic_width_in_luma_samples" );
+    WRITE_UVLC( h->iHeight,                            "pic_height_in_luma_samples" );
     WRITE_FLAG( FALSE,                                  "conformance_window_flag" );
     WRITE_UVLC( 0,                                      "bit_depth_luma_minus8" );
     WRITE_UVLC( 0,                                      "bit_depth_chroma_minus8" );
     WRITE_UVLC( h->ucBitsForPOC-4,                      "log2_max_pic_order_cnt_lsb_minus4" );
     WRITE_FLAG( FALSE,                                  "sps_sub_layer_ordering_info_present_flag");
 
-    WRITE_UVLC( 1,                                      "sps_max_dec_pic_buffering[i]" );
+    WRITE_UVLC( 1,                                      "sps_max_dec_pic_buffering_minus1[i]" );
     WRITE_UVLC( 0,                                      "sps_num_reorder_pics[i]" );
-    WRITE_UVLC( 0,                                      "sps_max_latency_increase[i]" );
+    WRITE_UVLC( 0,                                      "sps_max_latency_increase_plus1[i]" );
 
     UInt32 MinCUSize = h->ucMaxCUWidth >> (h->ucMaxCUDepth - 1);
     UInt32 log2MinCUSize = xLog2(MinCUSize)-1;
@@ -108,14 +118,14 @@ void xWriteSPS( X265_t *h )
     WRITE_UVLC( h->ucQuadtreeTUMaxDepthInter - 1,                                     "max_transform_hierarchy_depth_inter" );
     WRITE_UVLC( h->ucQuadtreeTUMaxDepthIntra - 1,                                     "max_transform_hierarchy_depth_intra" );
     WRITE_FLAG( 0,                                                                    "scaling_list_enabled_flag" );
-    WRITE_FLAG( 1,                                                                    "amp_enabled_flag" );
-    WRITE_FLAG( 0,                                                                    "sample_adaptive_offset_enabled_flag");
+    WRITE_FLAG( 0,                                                                    "amp_enabled_flag" ); //-wWXW
+    WRITE_FLAG( SAO,                                                                  "sample_adaptive_offset_enabled_flag");
     WRITE_FLAG( 0,                                                                    "pcm_enabled_flag");
 
     WRITE_UVLC( 1,                                                                    "num_short_term_ref_pic_sets" );
     xWriteShortTermRefPicSet( h );
     WRITE_FLAG( 0,                                                                    "long_term_ref_pics_present_flag" );
-    WRITE_FLAG( 1,                                                                    "sps_temporal_mvp_enable_flag" );
+    WRITE_FLAG( 0,                                                                    "sps_temporal_mvp_enable_flag" ); //wxw
     WRITE_FLAG( h->bStrongIntraSmoothing,                                             "sps_strong_intra_smoothing_enable_flag" );
     WRITE_FLAG( FALSE,                                                                "vui_parameters_present_flag" );
 
@@ -133,6 +143,8 @@ void xWritePPS( X265_t *h )
 
     WRITE_FLAG( 0,  "dependent_slice_enabled_flag" );
 
+    WRITE_FLAG( 0,                                          "output_flag_present_flag" );
+    WRITE_CODE( 0,  3,                                      "num_extra_slice_header_bits");
     WRITE_FLAG( h->bSignHideFlag, "sign_data_hiding_flag" );
 
     WRITE_FLAG( 1,                                          "cabac_init_present_flag" );
@@ -152,18 +164,37 @@ void xWritePPS( X265_t *h )
     WRITE_FLAG( 0,                                          "weighted_pred_flag" );   // Use of Weighting Prediction (P_SLICE)
     WRITE_FLAG( 0,                                          "weighted_bipred_flag" );  // Use of Weighting Bi-Prediction (B_SLICE)
 
-    WRITE_FLAG( 0,                                          "output_flag_present_flag" );
     WRITE_FLAG( 0,                                          "transquant_bypass_enable_flag" );
-    WRITE_FLAG( FALSE,                                      "tiles_enabled_flag"              );
-    WRITE_FLAG( FALSE,                                      "entropy_coding_sync_enabled_flag");
-    WRITE_FLAG( 0,                                          "seq_loop_filter_across_slices_enabled_flag");
-    WRITE_FLAG( 1,                                          "deblocking_filter_control_present_flag");
-    WRITE_FLAG( FALSE,                                      "deblocking_filter_override_enabled_flag" ); 
-    WRITE_FLAG( TRUE,                                       "pps_disable_deblocking_filter_flag" );
-    WRITE_FLAG( 0,                                          "pps_scaling_list_data_present_flag" ); 
+    WRITE_FLAG( h->bTiles,                                  "tiles_enabled_flag"              );
+#if USE_WPP_YANAN
+	WRITE_FLAG( TRUE,                                      "entropy_coding_sync_enabled_flag");
+#else
+	WRITE_FLAG( 0,                                          "entropy_coding_sync_enabled_flag");
+#endif
+    if ( h->bTiles ) {
+        WRITE_UVLC( 1,                                      "num_tile_columns_minus1" );
+        WRITE_UVLC( 1,                                      "num_tile_rows_minus1" );
+        WRITE_FLAG( 1,                                      "uniform_spacing_flag" );
+        WRITE_FLAG( 0,                                      "loop_filter_across_tiles_enabled_flag");
+    }
+    WRITE_FLAG( 0,                                          "loop_filter_across_slice_flag");
+   
+	if (DEBLOCK){
+		WRITE_FLAG( 0,                                          "deblocking_filter_control_present_flag");
+		//WRITE_FLAG( FALSE,                                      "deblocking_filter_override_enabled_flag" ); 
+		//   WRITE_FLAG( FALSE,                                       "pps_disable_deblocking_filter_flag" );
+		//WRITE_SVLC( 0,											 "pps_beta_offset_div2");
+		//WRITE_SVLC( 0,											 "pps_tc_offset_div2");
+	 }
+	 else{
+		WRITE_FLAG( 1,                                          "deblocking_filter_control_present_flag");
+		WRITE_FLAG( FALSE,                                      "deblocking_filter_override_enabled_flag" ); 
+		WRITE_FLAG( TRUE,                                       "pps_disable_deblocking_filter_flag" );
+	 }
+		
+	 WRITE_FLAG( 0,                                          "pps_scaling_list_data_present_flag" ); 
     WRITE_FLAG( FALSE,                                      "lists_modification_present_flag" );
     WRITE_UVLC( 0,                                          "log2_parallel_merge_level_minus2");
-    WRITE_CODE( 0,          3,                              "num_extra_slice_header_bits");
     WRITE_FLAG( 0,                                          "slice_segment_header_extension_present_flag");
     WRITE_FLAG( 0,                                          "pps_extension_flag" );
     xWriteRBSPTrailingBits(pBS);
@@ -181,20 +212,21 @@ void xWriteVPS( X265_t *h )
     WRITE_CODE( 0xFFFF,    16,                              "vps_reserved_ffff_16bits" );
     xCodePTL( h, TRUE, 1-1 );
 
-    // codeBitratePicRateInfo
-    {
-        WRITE_FLAG( 0,                                      "bit_rate_info_present_flag[i]" );
-        WRITE_FLAG( 0,                                      "pic_rate_info_present_flag[i]" );
-    }
+//     // codeBitratePicRateInfo
+//     {
+//         WRITE_FLAG( 0,                                      "bit_rate_info_present_flag[i]" );
+//         WRITE_FLAG( 0,                                      "pic_rate_info_present_flag[i]" );
+//     }
     WRITE_FLAG( FALSE,                                      "vps_sub_layer_ordering_info_present_flag");
     {
-        WRITE_UVLC( 1,                                      "vps_max_dec_pic_buffering[i]" );
+        WRITE_UVLC( 1,                                      "vps_max_dec_pic_buffering_minus1[i]" );
         WRITE_UVLC( 0,                                      "vps_num_reorder_pics[i]" );
-        WRITE_UVLC( 0,                                      "vps_max_latency_increase[i]" );
+        WRITE_UVLC( 0,                                      "vps_max_latency_increase_plus1[i]" );
     }
     WRITE_CODE( 0, 6,                                       "vps_max_nuh_reserved_zero_layer_id" );
     WRITE_UVLC( 1 - 1,                                      "vps_max_op_sets_minus1" );
-    WRITE_UVLC( 0,                                          "vps_num_hrd_parameters" );
+    WRITE_FLAG( 0,                                          "vps_timing_info_present_flag");
+    //WRITE_UVLC( 0,                                          "vps_num_hrd_parameters" );
 
     // hrd_parameters
     WRITE_FLAG( 0,                                          "vps_extension_flag" );
@@ -222,13 +254,19 @@ void xWriteSliceHeader( X265_t *h )
 
     WRITE_UVLC( eSliceType,     "slice_type" );
 
-    if ( (eSliceType != SLICE_I) || ((eSliceType == SLICE_I) && (h->iPoc != 0)) ) {
+    if ( eSliceType != SLICE_I ) {
         WRITE_CODE( h->iPoc % (1<<h->ucBitsForPOC), h->ucBitsForPOC, "pic_order_cnt_lsb");
         WRITE_FLAG( 1, "short_term_ref_pic_set_pps_flag");
         // (1<<numbits) >= ref_frame_nums
         //WRITE_CODE( 0, 0, "short_term_ref_pic_set_idx" );
-        WRITE_FLAG( 0,                                "slice_temporal_mvp_enable_flag" );
     }
+
+#if SAO
+    int SaoEnable = h->sao_param.bSaoFlag[0];
+    int SaoEnableChroma = h->sao_param.bSaoFlag[1];
+    WRITE_FLAG(SaoEnable, "slice_sao_luma_flag");
+    WRITE_FLAG(SaoEnableChroma, "slice_sao_chroma_flag");
+#endif
 
     // we always set num_ref_idx_active_override_flag equal to one. this might be done in a more intelligent way
     if ( eSliceType != SLICE_I ) {
@@ -246,24 +284,50 @@ void xWriteSliceHeader( X265_t *h )
         WRITE_UVLC( MRG_MAX_NUM_CANDS - h->ucMaxNumMergeCand, "five_minus_max_num_merge_cand" );
     }
 
-    WRITE_SVLC( h->iQP - 26, "slice_qp_delta" );
-    //   if( sample_adaptive_offset_enabled_flag )
-    //     sao_param()
+		WRITE_SVLC( h->iQP - 26, "slice_qp_delta" );
     //   if( deblocking_filter_control_present_flag )
     //     disable_deblocking_filter_idc
 
-#if BYTE_ALIGNMENT
-    xWriteByteAlignment(pBS);   // Slice header byte-alignment
-#else
-    xWriteAlignOne(pBS);
+    // CHECK_ME: is flag right?
+#if SAO
+    // CHECK_ME: loop_filter_across_slice_flag control it
+    if (0 && ((SAO && (SaoEnable || SaoEnableChroma)) || DEBLOCK)) {
+        WRITE_FLAG(1, "slice_loop_filter_across_slices_enabled_flag");
+    }
 #endif
+
+#if !USE_WPP_YANAN //if WPP is used
+		if ( h->bTiles ) {
+			WRITE_UVLC(0, "num_entry_point_offsets");
+		}
+    xWriteByteAlignment(pBS);   // Slice header byte-alignment
+#endif
+
 }
+
+#if USE_WPP_YANAN
+void xWriteTilesWPPEntryPoint_Yanan( X265_t *h, Int32 nNumEntropyPointOffsets, Int offsetLenMinus1, Int32 *nEntropyPointOffsets )//x64 modify, change type to Int
+{
+	xBitStream *pBS = &h->bs;
+
+	WRITE_UVLC(nNumEntropyPointOffsets, "num_entry_point_offsets"); 
+	if (nNumEntropyPointOffsets>0){
+		WRITE_UVLC(offsetLenMinus1, "offset_len_minus1"); 
+	}
+
+	for (Int idx=0; idx<nNumEntropyPointOffsets; idx++){//x64 modify, convert to Int
+		WRITE_CODE(nEntropyPointOffsets[idx]-1, offsetLenMinus1+1, "entry_point_offset");
+	}
+
+	xWriteByteAlignment(pBS);   // Slice header byte-alignment
+}
+#endif
 
 void xWriteSliceEnd( X265_t *h )
 {
     xBitStream *pBS = &h->bs;
 
-    xWriteByteAlignment(pBS);   // Byte-alignment in slice_data() at end of sub-stream
+    //xWriteByteAlignment(pBS);   // Byte-alignment in slice_data() at end of sub-stream
     xWriteRBSPTrailingBits(pBS);
 }
 
@@ -369,9 +433,9 @@ INIT_CHROMA_PRED_MODE[3][NUM_CHROMA_PRED_CTX] = {
 
 static CUInt8
 INIT_INTER_DIR[3][NUM_INTER_DIR_CTX] = {
-    {  95,   79,   63,   31, },
-    {  95,   79,   63,   31, },
-    { CNU,  CNU,  CNU,  CNU, },
+    {  95,   79,   63,   31, 31, },  //add the last 31 by wxw
+    {  95,   79,   63,   31, 31, },
+    { CNU,  CNU,  CNU,  CNU, CNU},
 };
 
 static CUInt8
@@ -483,6 +547,23 @@ INIT_TRANSFORMSKIP_FLAG[3][2*NUM_TRANSFORMSKIP_FLAG_CTX] = {
     { 139,  139},
 };
 
+static CUInt8
+INIT_SAO_MERGE_FLAG[3][NUM_SAO_MERGE_FLAG_CTX] =
+{
+    { 153,  },
+    { 153,  },
+    { 153,  },
+};
+
+static CUInt8
+INIT_SAO_TYPE_IDX[3][NUM_SAO_TYPE_IDX_CTX] =
+{
+    { 160, },
+    { 185, },
+    { 200, },
+};
+
+
 // ***************************************************************************
 // * Entropy Functions
 // ***************************************************************************
@@ -565,6 +646,10 @@ void xCabacInit( X265_t *h )
     INIT_CABAC( 1, NUM_TRANS_SUBDIV_FLAG_CTX,   INIT_TRANS_SUBDIV_FLAG  );
     assert( nOffset == OFF_TS_FLAG_CTX );
     INIT_CABAC( 1, NUM_TRANSFORMSKIP_FLAG_CTX,  INIT_TRANSFORMSKIP_FLAG );
+    assert( nOffset == OFF_SAO_MERGE_FLAG_CTX );
+    INIT_CABAC( 1, NUM_SAO_MERGE_FLAG_CTX,      INIT_SAO_MERGE_FLAG     );
+    assert( nOffset == OFF_SAO_TYPE_IDX_CTX );
+    INIT_CABAC( 1, NUM_SAO_TYPE_IDX_CTX,        INIT_SAO_TYPE_IDX       );
 
 #undef INIT_CABAC
 
@@ -650,7 +735,7 @@ void testAndWriteOut( xCabac *pCabac, xBitStream *pBS )
     CABAC_LEAVE;
 }
 
-void xCabacEncodeBin( xCabac *pCabac, xBitStream *pBS, UInt binValue, UInt nCtxState )
+void xCabacEncodeBin( xCabac *pCabac, UInt binValue, UInt nCtxState )//remove unused parameter
 {
     CABAC_ENTER;
     UInt8 ucState = pCabac->contextModels[nCtxState];
@@ -676,9 +761,10 @@ void xCabacEncodeBin( xCabac *pCabac, xBitStream *pBS, UInt binValue, UInt nCtxS
 
     pCabac->contextModels[nCtxState] = ucState;
     CABAC_LEAVE;
+
 }
 
-void xCabacEncodeBinEP( xCabac *pCabac, xBitStream *pBS, UInt binValue )
+void xCabacEncodeBinEP( xCabac *pCabac, UInt binValue )//x64 modify, remove unused parameter
 {
     CABAC_ENTER;
 
@@ -688,7 +774,7 @@ void xCabacEncodeBinEP( xCabac *pCabac, xBitStream *pBS, UInt binValue )
     }
     iBitsLeft--;
     CABAC_LEAVE;
-    testAndWriteOut( pCabac, pBS );
+
 }
 
 void xCabacEncodeBinsEP( xCabac *pCabac, xBitStream *pBS, UInt binValues, Int numBins )
@@ -709,9 +795,10 @@ void xCabacEncodeBinsEP( xCabac *pCabac, xBitStream *pBS, UInt binValues, Int nu
     pCabac->uiLow <<= numBins;
     pCabac->uiLow  += pCabac->uiRange * binValues;
     pCabac->iBitsLeft -= numBins;
+
 }
 
-void xCabacEncodeTerminatingBit( xCabac *pCabac, xBitStream *pBS, UInt binValue )
+void xCabacEncodeTerminatingBit( xCabac *pCabac, UInt binValue )//x64 modify, remove unused parameter
 {
     CABAC_ENTER;
 
@@ -730,4 +817,29 @@ void xCabacEncodeTerminatingBit( xCabac *pCabac, xBitStream *pBS, UInt binValue 
 
     CABAC_LEAVE;
 }
+
+
+void xWriteCabacCmds( xCabac *pCabac, xBitStream *pBS, UInt32 *pCmd, Int32 iCmdNum )
+{
+	//int x = 0;
+	while( iCmdNum-- > 0 ) {
+		UInt32  uiCmd   = *pCmd++;
+		// TODO: hardcode! 
+		UInt    nVal    = (uiCmd >> FLAG_OFF_VAL);
+		UInt    nCtx    = (uiCmd >> FLAG_OFF_CTX) & FLAG_MASK_CTX;
+
+		//printf("[%6d] %08X\n", x++, uiCmd);
+		if ( uiCmd & FLAG_TYPE_BIN ) {
+			xCabacEncodeBin( pCabac, nVal, nCtx );
+		}
+		else if ( uiCmd & FLAG_TYPE_TRM ) {
+			xCabacEncodeTerminatingBit( pCabac, nVal );
+		}
+		else {
+			xCabacEncodeBinsEP( pCabac, pBS, nVal, nCtx );
+		}
+		testAndWriteOut( pCabac, pBS );
+	}
+}
+
 

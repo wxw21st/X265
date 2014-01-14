@@ -1,7 +1,7 @@
 /*****************************************************************************
- * bitstream.h: Bitstream functions
+ * bitstream.h: Bitstream definitions
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ * Copyright (C) 2012-2015 x265 project
  *
  * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
  *
@@ -38,10 +38,29 @@ typedef struct xBitStream {
     UInt32      dwCache;
     Int         nCachedBits;
     UInt8      *pucBits0;
+	UInt32		numPreventByte;
 } xBitStream;
 
 
 #define putBits32(dst, x)    *(UInt32*)(dst) = (x);
+
+#if USE_WPP_YANAN
+#define flushCache_WPP_Amendment_1_YANAN(dst, x, bits, numPreventByte)    { \
+	int _i; \
+	for(_i=0; _i < (bits)>>3; _i++) { \
+	const UInt _tmp = (x) >> 24; \
+	(x) <<= 8; \
+	if (   (dst)[-1] == 0 \
+	&& (dst)[-2] == 0 \
+	&& _tmp <= 3 ){ \
+	*(dst)++ = 0x03; \
+	numPreventByte++;\
+}\
+	*(dst)++ = _tmp; \
+	} \
+}
+#endif
+
 #define flushCache(dst, x, bits)    { \
     int _i; \
     for(_i=0; _i < (bits)>>3; _i++) { \
@@ -56,9 +75,10 @@ typedef struct xBitStream {
 }
 
 // ***************************************************************************
-static void xBitStreamInit(xBitStream *pBS, UInt8 *pucBuffer, Int nBufferSize)
+static void xBitStreamInit(xBitStream *pBS, UInt8 *pucBuffer, Int nBufferSize)//x64 modify, avoid warning
 {
     assert( nBufferSize > 0 );
+		nBufferSize = 100;//x64 modify, avoid warning, this parameter is not used
 
     pBS->pucBits        =
     pBS->pucBits0       = pucBuffer;
@@ -87,9 +107,11 @@ static void xPutBits(xBitStream *pBS, UInt32 uiBits, Int nNumBits)
     else {
         UInt32 dwCache = pBS->dwCache;
         dwCache |= xSHR(uiBits, -nShift);
-
-        flushCache(pBS->pucBits, dwCache, 32);
-
+#if USE_WPP_YANAN
+		flushCache_WPP_Amendment_1_YANAN(pBS->pucBits, dwCache, 32, pBS->numPreventByte);
+#else
+		flushCache(pBS->pucBits, dwCache, 32);
+#endif
         pBS->dwCache = xSHL(uiBits, (32 + nShift));
         pBS->nCachedBits = -nShift;
     }
@@ -121,7 +143,11 @@ static void xWriteRBSPTrailingBits(xBitStream *pBS)
 
 static Int32 xBitFlush(xBitStream *pBS)
 {
-    flushCache(pBS->pucBits, pBS->dwCache, pBS->nCachedBits);
+#if USE_WPP_YANAN
+	flushCache_WPP_Amendment_1_YANAN(pBS->pucBits, pBS->dwCache, pBS->nCachedBits, pBS->numPreventByte);
+#else
+	flushCache(pBS->pucBits, pBS->dwCache, pBS->nCachedBits);
+#endif
     pBS->nCachedBits &= 7;
     return (Int32)( (pBS->pucBits - pBS->pucBits0) + (pBS->nCachedBits + 7) / 8 );
 }
@@ -178,7 +204,7 @@ static void xWriteFlag( xBitStream *pBS, UInt32 uiCode )
 #define NUM_ADI_CTX                   1       ///< number of context models for intra prediction
 
 #define NUM_CHROMA_PRED_CTX           2       ///< number of context models for intra prediction (chroma)
-#define NUM_INTER_DIR_CTX             4       ///< number of context models for inter prediction direction
+#define NUM_INTER_DIR_CTX             5//4       ///< number of context models for inter prediction direction
 #define NUM_MV_RES_CTX                2       ///< number of context models for motion vector difference
 
 #define NUM_REF_NO_CTX                2       ///< number of context models for reference index
@@ -202,8 +228,11 @@ static void xWriteFlag( xBitStream *pBS, UInt32 uiCode )
 #define NUM_ABS_FLAG_CTX_LUMA          4      ///< number of context models for greater than 2 flag of luma
 #define NUM_ABS_FLAG_CTX_CHROMA        2      ///< number of context models for greater than 2 flag of chroma
 
-#define NUM_MVP_IDX_CTX                2       ///< number of context models for MVP index
+#define NUM_MVP_IDX_CTX                2      ///< number of context models for MVP index
 #define NUM_TRANSFORMSKIP_FLAG_CTX     1      ///< number of context models for transform skipping
+
+#define NUM_SAO_MERGE_FLAG_CTX         1      ///< number of context models for SAO merge flags
+#define NUM_SAO_TYPE_IDX_CTX           1      ///< number of context models for SAO type index
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 

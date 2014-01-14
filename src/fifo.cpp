@@ -1,9 +1,9 @@
 /*****************************************************************************
- * fifo.cpp: fifo control functions
+ * fifo.cpp: fifo and test fifo
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ * Copyright (C) 2012-2015 x265 project
  *
- * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
+ * Authors: Min Chen <chenm003@163.com>, Xiangwen Wang <wxw21st@163.com>, 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
  * This program is also available under a commercial proprietary license.
  * For more information, contact us at wxw21st@163.com.
  *****************************************************************************/
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,18 +52,18 @@ void Initialize(fifo_t *pFifo)
 static
 void Activate(fifo_t *pFifo)
 {
-    pFifo->m_hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-    if(pFifo->m_hCompletionPort == NULL){
-        #ifdef _cplusplus
-        throw("Failed to CreateIoCompletionPort");
-        #else
-        abort();
-        #endif
-    }
+	pFifo->m_hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	if(pFifo->m_hCompletionPort == NULL){
+#ifdef _cplusplus
+		throw("Failed to CreateIoCompletionPort");
+#else
+		abort();
+#endif
+	}
 
-    ResetEvent(pFifo->m_hCancelEvent);
-    ResetEvent(pFifo->m_hCancelEvent);
-    pFifo->m_elmCount = 0;            
+	ResetEvent(pFifo->m_hCancelEvent);
+	ResetEvent(pFifo->m_hCancelEvent);
+	pFifo->m_elmCount = 0;            
 }
 
 /*! The Inactivate method inactivates the FIFO. When FIFO is

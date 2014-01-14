@@ -1,9 +1,9 @@
 /*****************************************************************************
  * md5.cpp: Calculate MD5 for SEI
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ * Copyright (C) 2012-2015 x265 project
  *
- * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
+ * Authors: Xiangwen Wang <wxw21st@163.com>, Min Chen <chenm003@163.com> 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
  * This program is also available under a commercial proprietary license.
  * For more information, contact us at wxw21st@163.com.
  *****************************************************************************/
+
 
 #include "md5.h"
 
@@ -140,14 +141,14 @@ void MD5Final(MD5Context *ctx, UInt8 *digest)
 
     /* Append length in bits and transform */
     // CHECK_ME: Always use 32-bits operator
-    *(unsigned *)(&ctx->in[4*14]) = ctx->bits[0];
-    *(unsigned *)(&ctx->in[4*15]) = ctx->bits[1];
+    memcpy( &ctx->in[4*14], &ctx->bits[0], 4 );
+    memcpy( &ctx->in[4*15], &ctx->bits[1], 4 );
 
     MD5Transform(ctx->buf, (UInt32 *) ctx->in);
     byteReverse((UInt8 *) ctx->buf, 4);
     memcpy(digest, ctx->buf, 16);
 
-    memset(ctx, 0, sizeof(ctx));        /* In case it's sensitive */
+    memset(ctx, 0, sizeof(*ctx));        /* In case it's sensitive */
 }
 
 /* The four core functions - F1 is optimized somewhat */

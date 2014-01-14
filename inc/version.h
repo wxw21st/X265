@@ -1,9 +1,10 @@
 /*****************************************************************************
- * version.h: version control 
+ * versions.h: for version control
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ *****************************************************************************
+ * Copyright (C) 2012-2015 x265 project
  *
- * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
+ * Authors: Min Chen <chenm003@163.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +22,6 @@
  * This program is also available under a commercial proprietary license.
  * For more information, contact us at wxw21st@163.com.
  *****************************************************************************/
-
-
 #define X265_REV 113
-#define X265_REV_DIFF 158
-#define X265_VERSION "r113+158 8bd5af7"
+#define X265_REV_DIFF 234
+#define X265_VERSION "r113+234 0559e41"

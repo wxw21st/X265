@@ -1,9 +1,10 @@
 /*****************************************************************************
  * utils.h: Util functions
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ *****************************************************************************
+ * Copyright (C) 2012-2015 x265 project
  *
- * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
+ * Authors: Min Chen <chenm003@163.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +46,14 @@ static int xLog2(UInt32 x)
     return(log2Size);
 }
 
+
+static Int32 av_clip_c(int a, int amin, int amax)
+{
+	if      (a < amin) return amin;
+	else if (a > amax) return amax;
+	else               return a;
+}
+
 static Int32 Clip3( Int32 minVal, Int32 maxVal, Int32 a )
 {
     if ( a < minVal )
@@ -62,6 +71,16 @@ static Int32 Clip3( Int32 minVal, Int32 maxVal, Int32 a )
 #define MALLOC(n)       malloc(n)
 #define FREE(p)         free(p)
 #define ASIZE(x)        ( sizeof(x)/sizeof((x)[0]) )
+
+#ifdef _OPENMP
+    #ifdef _MSC_VER
+        #include <windows.h>
+        #define SLEEP(x)    Sleep(x)
+    #else
+        #include <unistd.h>
+        #define SLEEP(x)    usleep((x)*100)
+    #endif
+#endif
 
 #define BSWAP32(x)          ( ((x)<<24) + (((x)<<8)&0xff0000) + (((x)>>8)&0xff00) + ((x)>>24) )
 

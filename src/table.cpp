@@ -1,7 +1,7 @@
 /*****************************************************************************
  * table.cpp: Encoder ROM Tables
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ * Copyright (C) 2012-2015 x265 project
  *
  * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
  *

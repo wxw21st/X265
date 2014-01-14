@@ -1,10 +1,10 @@
 /*****************************************************************************
  * interface.cpp: interface APIs
  *****************************************************************************
- * Copyright (C) 2012-2020 x265 project
+ * Copyright (C) 2012-2015 x265 project
  *
- * Authors: Min Chen <chenm003@163.com> Xiangwen Wang <wxw21st@163.com>
- *
+ * Authors: Xiangwen Wang <wxw21st@163.com>, Min Chen <chenm003@163.com>, 
+ *          
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation;
@@ -21,7 +21,6 @@
  * This program is also available under a commercial proprietary license.
  * For more information, contact us at wxw21st@163.com.
  *****************************************************************************/
-
 
 #include <assert.h>
 #include "x265.h"
@@ -55,7 +54,8 @@ void xIEncInit( X265_t *h )
 int xIEncFrame( X265_t *h, xFrame *frame, unsigned char *outbuf, unsigned bufsize )
 {
     //printf("w=%d, h=%d, t=%d, q=%d, rec=%d, vis=%d\n", h->usWidth, h->usHeight, h->nThreads, h->iQP, h->bWriteRecFlag, h->bWriteVisCUFlag);
-    int nSize = xEncodeFrame( h, frame, outbuf, bufsize );
+    int nSize = xEncodeFrame( h, frame, outbuf, bufsize
+		);
     return( nSize );
 }
 
@@ -68,10 +68,10 @@ void xIEncFree( X265_t *h )
 int xIEncSetParamInt( X265_t *h, const char *name, const int val )
 {
     if ( !strcmp(name, "w") ) {
-        h->usWidth = val;
+        h->iWidth = val;
     }
     else if ( !strcmp(name, "h") ) {
-        h->usHeight = val;
+        h->iHeight = val;
     }
     else if ( !strcmp(name, "q") ) {
         h->iQP = val;
