@@ -16,29 +16,28 @@ endif()
 source_group(SRC FILES ${ASMS})
 
 if(MSVC)
-    # this is horrible. ugly, and hacky, and it reproduces logic found
-    # in the yasm CMake modules, but this is required because of this cmake bug
+    # this is required because of this cmake bug
     # http://www.cmake.org/Bug/print_bug_page.php?bug_id=8170
-    if (X64)
-        set(FLAGS -f win64 -Xvc -m amd64 -DARCH_X86_64=1 -DHAVE_ALIGNED_STACK=0)
+    if(WIN32)
+        set(SUFFIX obj)
     else()
-        set(FLAGS -f win32 -Xvc -DARCH_X86_64=0 -DHAVE_ALIGNED_STACK=0 -DPREFIX)
+        set(SUFFIX o)
     endif()
-    if (HIGH_BIT_DEPTH)
-        set(FLAGS ${FLAGS} -DHIGH_BIT_DEPTH=1 -DBIT_DEPTH=10)
-    else()
-        set(FLAGS ${FLAGS} -DHIGH_BIT_DEPTH=0 -DBIT_DEPTH=8)
-    endif()
-    foreach(ASM ${ASMS})
-        set(OBJS ${OBJS} ${ASM}.obj)
-        add_custom_command(
-            OUTPUT ${ASM}.obj
-            COMMAND ${YASM_EXECUTABLE} ARGS ${FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${ASM} -o ${ASM}.obj
-            DEPENDS ${ASM})
-    endforeach()
-    add_library(ASM_LIB asm-export.cpp ${ASMS} ${OBJS})
+
+    # compile X86 arch asm files here
+        foreach(ASM ${ASMS})
+            set(ASM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${ASM})
+            list(APPEND ASM_SRCS ${ASM_SRC})
+            list(APPEND ASM_OBJS ${ASM}.${SUFFIX})
+            add_custom_command(
+                OUTPUT ${ASM}.${SUFFIX}
+                COMMAND ${NASM_EXECUTABLE} ARGS ${NASM_FLAGS} ${ASM_SRC} -o ${ASM}.${SUFFIX}
+                DEPENDS ${ASM_SRC})
+        endforeach()
+    add_library(ASM_LIB asm-export.cpp ${ASM_OBJS})
 else()
-    enable_language(ASM_YASM)
+    enable_language(ASM_NASM)
     add_library(ASM_LIB asm-export.cpp ${ASMS})
 endif()
+source_group(ASM FILES ${ASM_SRCS})
 

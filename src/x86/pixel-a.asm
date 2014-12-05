@@ -205,7 +205,7 @@ cglobal pixel_ssd_%1x%2, 4,7,6
     mov    r4d, %%n
 %endif
     pxor    m0, m0
-.loop
+.loop:
     mova    m1, [r0]
     mova    m2, [r0+offset0_1]
     mova    m3, [r0+offset0_2]
@@ -7289,7 +7289,7 @@ cglobal pixel_sub_ps_%1x%2, 6, 7, 8, dest, deststride, src0, src1, srcstride0, s
 add    r1,     r1
 mov    r6d,    %2/4
 
-.loop
+.loop:
 
     movd         m0,    [r2]
     movd         m1,    [r3]
@@ -7351,7 +7351,7 @@ cglobal pixel_sub_ps_%1x%2, 6, 7, 8, dest, deststride, src0, src1, srcstride0, s
 add    r1,     r1
 mov    r6d,    %2/4
 
-.loop
+.loop:
 
     movh        m0,    [r2]
     movh        m1,    [r3]
@@ -7558,7 +7558,7 @@ cglobal pixel_sub_ps_%1x%2, 6, 7, 8, dest, deststride, src0, src1, srcstride0, s
 add    r1,     r1
 mov    r6d,    %2/4
 
-.loop
+.loop:
 
     movh        m0,    [r2]
     movh        m1,    [r3]
@@ -7622,7 +7622,7 @@ cglobal pixel_sub_ps_%1x%2, 6, 7, 6, dest, deststride, src0, src1, srcstride0, s
 add    r1,     r1
 mov    r6d,    %2/4
 
-.loop
+.loop:
 
     movu        m0,    [r2]
     movu        m1,    [r3]
@@ -7707,7 +7707,7 @@ add    r1,     r1
 mov    r6d,    %2/4
 pxor   m6,     m6
 
-.loop
+.loop:
 
     movu         m1,    [r2]
     pmovzxbw     m0,    m1
@@ -7794,7 +7794,7 @@ add    r1,     r1
 mov    r6d,    %2/2
 pxor   m6,     m6
 
-.loop
+.loop:
 
     movu         m1,    [r2]
     pmovzxbw     m0,    m1
@@ -7857,7 +7857,7 @@ cglobal pixel_sub_ps_%1x%2, 6, 7, 8, dest, deststride, src0, src1, srcstride0, s
 add    r1,     r1
 mov    r6d,    %2/2
 
-.loop
+.loop:
 
     movh        m0,    [r2]
     movh        m1,    [r2 + 8]
@@ -7943,7 +7943,7 @@ add    r1,     r1
 mov    r6d,    %2/2
 pxor   m6,    m6
 
-.loop
+.loop:
 
     movu         m1,    [r2]
     pmovzxbw     m0,    m1
@@ -8047,7 +8047,7 @@ add    r1,     r1
 mov    r6d,    %2/2
 pxor   m6,    m6
 
-.loop
+.loop:
 
     movu         m1,    [r2]
     pmovzxbw     m0,    m1
