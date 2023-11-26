@@ -33,8 +33,8 @@
 #define CU_TYPE_STAT						1  //statistic all CU info. such Skip, Merge Cbf
 
 #define USE_WPP_YANAN						1 //WPP Syntax
-#define SSD_USE_TRUE_ASM        1 //TURE ASM from x265-multicore and x264, not intrinsic, by YananZhao, 2013-11-17
-#define SATD_USE_TRUE_ASM				1 //CAUTION: x264 SATD with sizes larger than 4x4 have different results compared with HM,
+#define SSD_USE_TRUE_ASM        0 //TURE ASM from x265-multicore and x264, not intrinsic, by YananZhao, 2013-11-17
+#define SATD_USE_TRUE_ASM				0 //CAUTION: x264 SATD with sizes larger than 4x4 have different results compared with HM,
 																	//this is because 16x16,32x32,64x64 in x264 are independently calculated, while in HM, they are added up by many 8x8s.
 #define LOGO_WIDTH (192)
 #define LOGO_HEIGHT (128)

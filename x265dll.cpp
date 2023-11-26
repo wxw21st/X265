@@ -29,6 +29,7 @@
 #include <time.h>
 #include "x265dll.h"
 #include ".\inc\md5.h"
+#include <windows.h>
 
 #define MAX_OUTBUF_SIZE     (1 * 1024 * 1024 *4)
 
@@ -37,9 +38,9 @@ extern UInt8 buf[MAX_WIDTH * MAX_HEIGHT * 3 / 2];
 extern UInt8 pucOutBuf0[ MAX_OUTBUF_SIZE];
 extern UInt8 pucOutBuf1[ MAX_OUTBUF_SIZE];
 
-extern UInt8 iLogoY[LOGO_WIDTH*LOGO_HEIGHT];
-extern UInt8 iLogoU[LOGO_WIDTH/2 * LOGO_HEIGHT/2];
-extern UInt8 iLogoV[LOGO_WIDTH/2 * LOGO_HEIGHT/2];
+//extern UInt8 iLogoY[LOGO_WIDTH*LOGO_HEIGHT];
+//extern UInt8 iLogoU[LOGO_WIDTH/2 * LOGO_HEIGHT/2];
+//extern UInt8 iLogoV[LOGO_WIDTH/2 * LOGO_HEIGHT/2];
 
 extern Int32 xEncodeFrameAPI( X265_t *h, xFrame *pFrame, UInt8 *pucOutBuf, UInt32 uiBufSize, int* nal_num, int* nal_len );
 
@@ -88,8 +89,8 @@ int x265_encoder_init(void **ppParam, int format, char* cfg )
 	ph->pOutBuf0        = (UInt8 *)malloc(MAX_OUTBUF_SIZE*sizeof(UInt8));//pucOutBuf0;
 	ph->pOutBuf1        = (UInt8 *)malloc(MAX_OUTBUF_SIZE*sizeof(UInt8));//pucOutBuf1;
 
-	char  cmd[30] = "null";
-	int     val = -1;
+	char  cmd[256] = "null";
+	char  val[256];
 
 	FILE *fpi = fopen(cfg, "r");
 	if ( fpi==NULL ) {
@@ -98,36 +99,36 @@ int x265_encoder_init(void **ppParam, int format, char* cfg )
 	}
 
 	while (!feof(fpi)) {
-		fscanf(fpi, "%s %d\n", cmd, &val);
+		fscanf(fpi, "%s %s\n", cmd, val);
 		if ( !strcmp(cmd, "ImageWidth") ) {
-			ph->iWidth = val;
+			ph->iWidth = atoi(val);
 		}
 		else if ( !strcmp(cmd, "ImageHeight") ) {
-			ph->iHeight = val;
+			ph->iHeight = atoi(val);
 		}
 		else if ( !strcmp(cmd, "QP") ) {
-			ph->iQP = val;
+			ph->iQP = atoi(val);
 		}
 		else if ( !strcmp(cmd, "IntraPeriod") ) {
-			ph->nIntraPeriod = val;
+			ph->nIntraPeriod = atoi(val);
 		}
 		else if ( !strcmp(cmd, "UseRateControl") ) {
-			ph->bUseRateCtrl = val;
+			ph->bUseRateCtrl = atoi(val);
 		}
 		else if ( !strcmp(cmd, "TargetKbps") ) {
-			ph->targetKbps = val;
+			ph->targetKbps = atoi(val);
 		}
 		else if ( !strcmp(cmd, "FrameRate") ) {
-			ph->nFrameRate = val;
+			ph->nFrameRate = atoi(val);
 		}
 		else if ( !strcmp(cmd, "StrongIntraSmoothing") ) {
-			ph->bStrongIntraSmoothing = val;
+			ph->bStrongIntraSmoothing = atoi(val);
 		}
 		else if ( !strcmp(cmd, "NumberOfThreads") ) {
-			ph->nThreads = val;
+			ph->nThreads = atoi(val);
 		}
 		else if ( !strcmp(cmd, "SceneChangeDetection") ) {
-			ph->bUseSceneChangeDetection = val;
+			ph->bUseSceneChangeDetection = atoi(val);
 		}
 		else {
 			printf("Unknown option [%s]\n", cmd);
@@ -210,6 +211,7 @@ int x265_encode(void *pParam, unsigned char* p_data, int* nal_num, int* nal_len,
 
 	/* Add logo "ZenHEVC /n from SJTU" */
 	if (iWidth==1920 && iHeight==1088) { //only for 1080P now
+#if LOGO
 		for (Int j=0; j<LOGO_HEIGHT; j++)	{
 			for (Int i=0; i<LOGO_WIDTH; i++)	{
 				Int iOffset = (j+928)*iWidth+(i+1664);
@@ -217,7 +219,7 @@ int x265_encode(void *pParam, unsigned char* p_data, int* nal_num, int* nal_len,
 				frameAligned.pucY[iOffset] = Clip3(0, 255, iLogoY[j*LOGO_WIDTH+i]+iY);
 			}
 		}
-
+#endif
 		//for (Int j=0; j<LOGO_HEIGHT/2; j++)	{
 		//	for (Int i=0; i<LOGO_WIDTH/2; i++)	{
 		//		Int iOffset = (j+928/2)*iWidth/2+(i+1664/2);

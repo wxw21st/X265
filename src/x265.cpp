@@ -30,7 +30,7 @@
 #define MAX_OUTBUF_SIZE     (1 * 1024 * 1024 * 8)
 UInt8 buf[MAX_WIDTH * MAX_HEIGHT * 3 / 2];
 
-#if 1 //turn this off when testAPI_main is on
+#if 0 //turn this off when testAPI_main is on
 UInt8 buf1[MAX_WIDTH * MAX_HEIGHT * 3 / 2];
 X265_t h;
 
@@ -43,7 +43,7 @@ int main( int argc, char *argv[] )
 
     int i;
     char   *inFile   = NULL;
-    char   *outFile  = NULL;
+    char   *outFile  = "output.bin";
     Int16   iWidth   = 352;//x64 modify, change type to Int
     Int16   iHeight  = 288;//x64 modify, change type to Int
     UInt32  nFrames  = 1;

@@ -24,14 +24,22 @@
 
 #if 1
 
+
 #include "x265dll.h"
 #include <Windows.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
-#include "x265.h"
+ //#include "x265.h"
 #include <math.h>
 typedef int Int;
 typedef unsigned char UInt8;
+
+#define OUT_STATIC_PSNR 1
+
+#define MAX_WIDTH 1024
+#define MAX_HEIGHT 1024
 
 #define MAX_OUTBUF_SIZE     (1 * 1024 * 1024 *4)
 extern UInt8 buf[MAX_WIDTH * MAX_HEIGHT * 3 / 2];
@@ -42,7 +50,7 @@ UInt8 pucOutBuf1[ MAX_OUTBUF_SIZE];
 
 int main()
 {
-	char *cfg = "D:\\x265_encoder_config.cfg";
+	char *cfg = ".\\..\\encoder_config.cfg";
 
 	void *ph;
 	x265_encoder_init(&ph, 1, cfg);
@@ -54,8 +62,8 @@ int main()
 	unsigned char *p_yuv  = NULL;
 
 	
-	char *inFile = "D:\\YUV\\SonyBluRay\\1080P\\BattleOfTheYear_1920x1080_25.yuv";
-	char *outFile = "D:\\YUV\\test_out\\Foreman_1920x1080.265";
+	char *inFile = "D:\\test\\YUV\\ClassD\\BasketballPass_416x240_50.yuv";
+	char *outFile = "bit.265";
 	
 
 	FILE *fpi = fopen( inFile, "rb");
@@ -63,7 +71,7 @@ int main()
 	FILE *fpo = fopen( outFile, "wb");
 	assert( fpo != NULL );
 
-	Int  nYSize    = 1920*1080;
+	Int  nYSize    = ph->iWidth*ph->iHeight;
 	Int  nImageSize = nYSize*3/2;
 
 	
@@ -79,7 +87,7 @@ int main()
 		Int iEncSize =  x265_encode(ph, pucOutBuf1, &nal_num, nal_len, buf );
 				
 		X265_t *pH = (X265_t *)ph;
-  	if (STATIC_PSNR){  
+  	if (OUT_STATIC_PSNR){  
 			visa_encode_static(pH, pH->eSliceType, iEncSize, pH->pFrameCur->pucY, pH->pFrameCur->pucU,pH->pFrameCur->pucV);
 		}
 		else{

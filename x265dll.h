@@ -36,9 +36,12 @@
 extern "C" {
 #endif
 
-	X265CODEC_API_DLL_ int x265_encoder_init(void **ppParam, int format, char* cfg );
-	X265CODEC_API_DLL_ int x265_encode(void *pParam, unsigned char* p_data, int* nal_num, int* nal_len, unsigned char* p_yuv );
-	X265CODEC_API_DLL_ void x265_encoder_free(void *pParam);
+	//X265CODEC_API_DLL_ int x265_encoder_init(void **ppParam, int format, char* cfg );
+	//X265CODEC_API_DLL_ int x265_encode(void *pParam, unsigned char* p_data, int* nal_num, int* nal_len, unsigned char* p_yuv );
+	//X265CODEC_API_DLL_ void x265_encoder_free(void *pParam);
+	 int x265_encoder_init(void **ppParam, int format, char* cfg );
+	 int x265_encode(void *pParam, unsigned char* p_data, int* nal_num, int* nal_len, unsigned char* p_yuv );
+	 void x265_encoder_free(void *pParam);
 
 #ifdef __cplusplus
 }

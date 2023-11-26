@@ -22,10 +22,12 @@
  * For more information, contact us at wxw21st@163.com.
  *****************************************************************************/
 
-#if 0
+#if 1
 
 #include <stdio.h>
 #include <Windows.h>
+
+#include "x265dll.h"
 
 BYTE g_pbBitstreamBuffer[1024 * 1024 * 10] ;
 BYTE g_pbYUVBuffer[1920 * 1088 * 3 / 2] ;
